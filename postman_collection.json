@@ -1,0 +1,226 @@
+{
+  "info": {
+    "name": "Finance Backend API",
+    "description": "Finance Data Processing and Access Control Backend.\n\n## Quick Start\n1. Run `POST /api/auth/login` with the default admin credentials\n2. Copy the `token` from the response\n3. In the collection's **Variables**, set `token` to that value\n4. All other requests will use it automatically\n\n**Default Admin:** `admin@finance.local` / `admin123`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token",   "value": "",                     "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  console.log('Token saved automatically');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@finance.local\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "description": "Login with email and password. The token is saved automatically to the collection variable."
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] },
+            "description": "Returns the currently authenticated user's profile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users (Admin only)",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "description": "Returns all users. Admin only."
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Analyst\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"secret123\",\n  \"role\": \"analyst\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] },
+            "description": "Create a new user with a role of viewer, analyst, or admin. Admin only."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"viewer\",\n  \"status\": \"inactive\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/users/2", "host": ["{{baseUrl}}"], "path": ["api","users","2"] },
+            "description": "Update a user's name, role, or status. All fields are optional. Admin only."
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users/2", "host": ["{{baseUrl}}"], "path": ["api","users","2"] },
+            "description": "Soft-deactivates a user (sets status to inactive). Admin only."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Financial Records",
+      "item": [
+        {
+          "name": "List Records (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/records?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","records"],
+              "query": [
+                { "key": "type",     "value": "expense", "disabled": true, "description": "income or expense" },
+                { "key": "category", "value": "Rent",    "disabled": true, "description": "Filter by category name" },
+                { "key": "from",     "value": "2024-01-01", "disabled": true, "description": "Start date YYYY-MM-DD" },
+                { "key": "to",       "value": "2024-12-31", "disabled": true, "description": "End date YYYY-MM-DD" },
+                { "key": "page",     "value": "1",  "disabled": false },
+                { "key": "limit",    "value": "20", "disabled": false }
+              ]
+            },
+            "description": "List records with optional filters. Analyst and Admin only.\n\nAvailable filters: `type`, `category`, `from`, `to`, `page`, `limit`"
+          }
+        },
+        {
+          "name": "Create Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"type\": \"income\",\n  \"category\": \"Salary\",\n  \"date\": \"2024-03-01\",\n  \"notes\": \"March salary\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/records", "host": ["{{baseUrl}}"], "path": ["api","records"] },
+            "description": "Create a new financial record. Admin only.\n\n- `amount`: positive number\n- `type`: `income` or `expense`\n- `date`: YYYY-MM-DD format\n- `notes`: optional"
+          }
+        },
+        {
+          "name": "Update Record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5500,\n  \"notes\": \"March salary (revised)\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/records/1", "host": ["{{baseUrl}}"], "path": ["api","records","1"] },
+            "description": "Partially update a record. All fields are optional. Admin only."
+          }
+        },
+        {
+          "name": "Delete Record (soft)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/records/1", "host": ["{{baseUrl}}"], "path": ["api","records","1"] },
+            "description": "Soft-deletes a record by setting deleted_at. The record is never physically removed. Admin only."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/summary", "host": ["{{baseUrl}}"], "path": ["api","dashboard","summary"] },
+            "description": "Returns total income, total expenses, net balance, and total record count. All roles."
+          }
+        },
+        {
+          "name": "Category Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/categories", "host": ["{{baseUrl}}"], "path": ["api","dashboard","categories"] },
+            "description": "Returns totals grouped by category and type (income/expense). All roles."
+          }
+        },
+        {
+          "name": "Monthly Trends (last 12 months)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/trends", "host": ["{{baseUrl}}"], "path": ["api","dashboard","trends"] },
+            "description": "Returns monthly income vs. expenses for the last 12 months. All roles."
+          }
+        },
+        {
+          "name": "Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/recent", "host": ["{{baseUrl}}"], "path": ["api","dashboard","recent"] },
+            "description": "Returns the 10 most recently created records. All roles."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+        "description": "Simple health check. No auth required."
+      }
+    }
+  ]
+}
