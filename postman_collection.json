@@ -5,7 +5,7 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "baseUrl", "value": "https://finance-backend-production-cc54.up.railway.app", "type": "string" },
     { "key": "token",   "value": "",                     "type": "string" }
   ],
   "item": [
